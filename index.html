@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>La plante et le score</title>
+<style>
+:root{--bg:#eef5ea;--bg2:#dcebd5;--fg:#1d2b1e;--muted:#5d705e;--card:#ffffff;--line:#d3e0cd;--green:#3f9b45;--green2:#2e7d36;--dead:#8a7a5a;--pot:#c2693b;--pot2:#a55128;--sky1:#bfe3ff;--sky2:#eaf7ff;--sun:#ffd86b;--ground:#8fc079;--shadow:0 10px 30px rgba(40,70,40,.14);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f160f;--bg2:#162016;--fg:#e6f0e2;--muted:#9bb09b;--card:#1a251a;--line:#2d3d2d;--green:#5fc066;--green2:#46a64d;--dead:#9a8a6a;--sky1:#0f1c33;--sky2:#233a5e;--sun:#e8e6d0;--ground:#3d6b3a;--shadow:0 10px 30px rgba(0,0,0,.4)}}
+:root[data-theme="dark"]{--bg:#0f160f;--bg2:#162016;--fg:#e6f0e2;--muted:#9bb09b;--card:#1a251a;--line:#2d3d2d;--green:#5fc066;--green2:#46a64d;--dead:#9a8a6a;--sky1:#0f1c33;--sky2:#233a5e;--sun:#e8e6d0;--ground:#3d6b3a;--shadow:0 10px 30px rgba(0,0,0,.4)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;justify-content:center}
+main{width:100%;max-width:440px;padding:22px 18px 28px}
+header{text-align:center;margin-bottom:16px}
+h1{font-size:1.5rem;margin:0 0 6px;letter-spacing:-.01em}
+p.sub{margin:0 auto;max-width:34ch;color:var(--muted);font-size:.9rem;line-height:1.4}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px;margin-bottom:14px}
+.stat{text-align:center;padding:6px 2px}
+.stat small{display:block;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em}
+.stat b{display:block;font-size:1.25rem;margin-top:2px;font-variant-numeric:tabular-nums}
+.stat.main b{color:var(--green)}
+.progress{grid-column:1/-1;padding:4px 4px 2px}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green2),var(--green));border-radius:6px;transition:width .6s ease}
+.plabel{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-top:6px}
+#lives{letter-spacing:2px}
+
+.scene{height:340px;position:relative;overflow:hidden;background:linear-gradient(180deg,var(--sky1),var(--sky2))}
+.sun{position:absolute;top:22px;right:26px;width:46px;height:46px;border-radius:50%;background:var(--sun);box-shadow:0 0 0 10px color-mix(in srgb,var(--sun) 25%,transparent),0 0 40px color-mix(in srgb,var(--sun) 60%,transparent)}
+.cloud{position:absolute;height:16px;width:64px;background:#fff;border-radius:20px;opacity:.85;animation:drift 40s linear infinite}
+.cloud::before{content:"";position:absolute;left:12px;top:-9px;width:28px;height:24px;background:#fff;border-radius:50%}
+.cloud.c1{top:50px;left:-80px}
+.cloud.c2{top:110px;left:-80px;animation-duration:55s;animation-delay:-20s;transform:scale(.7)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cloud{background:#3a4d70;opacity:.5}:root:not([data-theme="light"]) .cloud::before{background:#3a4d70}}
+@keyframes drift{to{left:110%}}
+.ground{position:absolute;left:0;right:0;bottom:0;height:70px;background:linear-gradient(180deg,var(--ground),color-mix(in srgb,var(--ground) 70%,#000));border-radius:50% 50% 0 0/22px 22px 0 0}
+.pot{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);width:96px;height:54px;background:linear-gradient(90deg,var(--pot2),var(--pot) 40%,var(--pot2));border-radius:2px 2px 14px 14px;clip-path:polygon(0 0,100% 0,92% 100%,8% 100%);box-shadow:inset 0 -6px 10px rgba(0,0,0,.15)}
+.pot::before{content:"";position:absolute;top:0;left:-4px;right:-4px;height:14px;background:var(--pot);border-radius:4px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.15)}
+.plant{position:absolute;bottom:68px;left:50%;width:0;height:0;transform-origin:bottom center;transition:transform 1s cubic-bezier(.5,0,.3,1)}
+.stem{position:absolute;bottom:0;left:-4px;width:8px;background:linear-gradient(90deg,var(--green2),var(--green));border-radius:4px;transition:height .6s,background .6s}
+.leaf{position:absolute;width:36px;height:19px;background:linear-gradient(135deg,var(--green),var(--green2));border-radius:0 100% 0 100%;transition:background .6s,transform .8s;animation:pop .5s ease-out;transform-origin:left bottom}
+.leaf.l{left:-34px;transform:scaleX(-1);transform-origin:right bottom}
+.leaf.r{left:4px}
+@keyframes pop{from{scale:0;opacity:0}to{scale:1;opacity:1}}
+.plant.dead .stem,.plant.dead .leaf{background:var(--dead)}
+.plant.dead{transform:rotate(38deg)}
+.plant.dead .leaf{transform:translateY(12px) rotate(30deg)}
+.plant.dead .leaf.l{transform:scaleX(-1) translateY(12px) rotate(30deg)}
+.flower{position:absolute;left:-19px;width:38px;height:38px;background:#ff6f91;border-radius:32%;opacity:0;transform:scale(0) rotate(0);transition:all .9s cubic-bezier(.3,1.5,.5,1);z-index:2}
+.flower::before{content:"";position:absolute;inset:0;background:#ff6f91;border-radius:32%;transform:rotate(45deg)}
+.flower::after{content:"";position:absolute;inset:28%;background:#ffd23f;border-radius:50%;box-shadow:0 0 0 2px rgba(255,255,255,.5)}
+.plant.win .flower{opacity:1;transform:scale(1) rotate(22deg)}
+
+.status{text-align:center;margin:16px 4px 14px;min-height:3em;font-size:1rem;font-weight:500;line-height:1.4}
+.row{display:flex;gap:8px}
+input{flex:1;min-width:0;padding:14px 16px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);color:var(--fg);font-size:1.05rem;outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus{border-color:var(--green);box-shadow:0 0 0 4px color-mix(in srgb,var(--green) 22%,transparent)}
+button{padding:14px 20px;border:0;border-radius:14px;background:linear-gradient(180deg,var(--green),var(--green2));color:#fff;font-size:1rem;font-weight:600;cursor:pointer;box-shadow:0 4px 12px color-mix(in srgb,var(--green) 40%,transparent);transition:transform .1s,filter .2s}
+button:hover{filter:brightness(1.07)}
+button:active{transform:scale(.97)}
+button.ghost{background:transparent;color:var(--muted);border:1.5px solid var(--line);margin-top:10px;width:100%;box-shadow:none;font-weight:500}
+button.ghost:hover{color:var(--fg);border-color:var(--muted)}
+.hist{margin-top:16px;padding:10px 14px;font-size:.82rem;color:var(--muted);text-align:center;word-break:break-word;line-height:1.5}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>🌱 La plante du numérique</h1>
+    <p class="sub" id="sub"></p>
+  </header>
+
+  <div class="card stats">
+    <div class="stat"><small>Précédent</small><b id="oldScore"></b></div>
+    <div class="stat main"><small>Actuel</small><b id="current"></b></div>
+    <div class="stat"><small>Objectif</small><b id="goalTxt"></b></div>
+    <div class="progress">
+      <div class="bar"><i id="bar"></i></div>
+      <div class="plabel"><span id="pct"></span><span id="lives" title="Hausses restantes avant la mort"></span></div>
+    </div>
+  </div>
+
+  <div class="card scene">
+    <div class="sun"></div><div class="cloud c1"></div><div class="cloud c2"></div>
+    <div class="ground"></div>
+    <div class="plant" id="plant"><div class="stem" id="stem"></div><div class="flower" id="flower"></div></div>
+    <div class="pot"></div>
+  </div>
+  <div class="status" id="status" aria-live="polite"></div>
+
+  <div class="row">
+    <input id="score" type="text" placeholder="Nouveau score" inputmode="decimal" autocomplete="off">
+    <button id="send">Envoyer</button>
+  </div>
+  <button class="ghost" id="reset">↺ Recommencer</button>
+  <div class="card hist" id="hist"></div>
+</main>
+
+<script>
+const OBJECTIF = 17.60;
+const DEPART = 20.70;
+const NIVEAU_MAX = 11;
+
+let dernier, taille, hausses, vivante, gagne, historique;
+const $ = id => document.getElementById(id);
+const arrondi = n => Math.round(n * 100) / 100;
+const fmt = n => n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function lire(texte) {
+  const t = String(texte).trim().replace(/\s/g, "").replace(",", ".");
+  if (t === "" || !/^-?\d+(\.\d+)?$/.test(t)) return null;
+  return arrondi(Number(t));
+}
+
+function init() {
+  dernier = DEPART; taille = 1; hausses = 0; vivante = true; gagne = false; historique = [DEPART];
+  $("plant").className = "plant";
+  $("plant").querySelectorAll(".leaf").forEach(l => l.remove());
+  $("score").value = "";
+  $("sub").textContent = "Score qui baisse = elle grandit. Deux hausses d'affilée = elle meurt. Atteins " + fmt(OBJECTIF) + " pour la faire fleurir !";
+  $("goalTxt").textContent = fmt(OBJECTIF);
+  dessiner("Score de départ : " + fmt(DEPART) + ". Objectif : " + fmt(OBJECTIF) + ".");
+}
+
+function dessiner(message) {
+  const niveau = Math.min(taille, NIVEAU_MAX);
+  $("stem").style.height = (30 + niveau * 18) + "px";
+  $("flower").style.bottom = (30 + niveau * 18 - 14) + "px";
+  const pct = Math.max(0, Math.min(100, (DEPART - dernier) / (DEPART - OBJECTIF) * 100));
+  $("bar").style.width = pct + "%";
+  $("pct").textContent = Math.round(pct) + " % du chemin";
+  $("lives").textContent = vivante ? "❤️".repeat(2 - hausses) + "🤍".repeat(hausses) : "🖤🖤";
+  $("current").textContent = fmt(dernier);
+  $("oldScore").textContent = fmt(historique.length > 1 ? historique[historique.length - 2] : DEPART);
+  $("status").textContent = message;
+  $("hist").textContent = "Historique : " + historique.map(fmt).join(" → ");
+}
+
+function ajouterFeuille() {
+  if (taille > NIVEAU_MAX) return;
+  const f = document.createElement("div");
+  f.className = "leaf " + (taille % 2 ? "r" : "l");
+  f.style.bottom = (taille * 18 + 4) + "px";
+  $("plant").appendChild(f);
+}
+
+function envoyer() {
+  if (!vivante) { $("status").textContent = "💀 La plante est morte : clique sur « Recommencer »."; return; }
+  if (gagne) { $("status").textContent = "🌸 Objectif déjà atteint : clique sur « Recommencer » pour rejouer."; return; }
+
+  const score = lire($("score").value);
+  if (score === null) { $("status").textContent = "⚠️ Entre un nombre valide (ex. 19,40)."; return; }
+
+  let msg = "Score identique : rien ne change.";
+
+  if (score < dernier) {
+    taille++; hausses = 0; ajouterFeuille();
+    msg = "📉 Le score baisse : la plante grandit !";
+  } else if (score > dernier) {
+    hausses++;
+    msg = "📈 Le score monte (" + hausses + "/2)... la plante s'inquiète.";
+    if (hausses >= 2) {
+      vivante = false;
+      $("plant").classList.add("dead");
+      msg = "💀 Deux hausses de suite : la plante est morte.";
+    }
+  }
+  dernier = score; historique.push(score);
+  if (vivante && score <= OBJECTIF) {
+    gagne = true;
+    $("plant").classList.add("win");
+    msg = "🌸 Objectif " + fmt(OBJECTIF) + " atteint : la plante fleurit, bravo !";
+  }
+  $("score").value = "";
+  dessiner(msg);
+}
+
+$("send").onclick = envoyer;
+$("score").onkeydown = e => { if (e.key === "Enter") envoyer(); };
+$("reset").onclick = init;
+init();
+</script>
+</body>
+</html>
