@@ -1,1 +1,1 @@
-# La-plante-du-num-rique
+# La-plante-du-numerique
